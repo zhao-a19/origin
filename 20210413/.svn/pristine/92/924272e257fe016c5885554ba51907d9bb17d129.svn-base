@@ -1,0 +1,295 @@
+/*******************************************************************************************
+*文件:    log_translate.h
+*描述:    日志相关宏定义
+*
+*作者:    王君雷
+*日期:    2018-01-23
+*修改:    创建文件                                                   ------> 2018-01-23
+*         修正视频相关的描述信息                                     ------> 2018-06-22
+*         加入PDT互联宏信息、加入安全通道状态相关信息                ------> 2018-08-08
+*         加入平台互联日志宏信息                                     ------> 2019-07-31 -dzj
+*         加入opcua和snmp日志宏信息                                  ------> 2020-02-18 -dzj
+*         加入xmpp日志宏信息                                         ------> 2020-09-04
+*******************************************************************************************/
+#ifndef _LOG_TRANSLATE_H_
+#define _LOG_TRANSLATE_H_
+
+//过滤关键字使用的宏
+#define KEY_WORD_FORBID "禁止通过的关键字"
+
+//过滤文件类型使用的宏
+#define FILE_NAME_NULL "文件名为空"
+#define FILE_TYPE_FORBID "禁止通过的文件类型"
+
+//过滤HTTP使用的宏
+#define HTTP_PROTO_ERROR "报文格式有误"
+#define HTTP_PERM_FORBID "禁止通过"
+#define HTTP_UNKNOWN_CMD "未知的命令"
+
+//过滤RTSP使用的宏
+#define RTSP_PROTO_ERROR "报文格式有误"
+#define RTSP_PERM_FORBID "禁止通过"
+#define RTSP_UNKNOWN_CMD "未知的命令"
+
+//过滤SMTP使用的宏
+#define SMTP_PROTO_ERROR "报文格式有误"
+#define SMTP_PERM_FORBID "禁止通过"
+#define SMTP_UNKNOWN_CMD "未知的命令"
+
+//过滤POP3使用的宏
+#define POP3_PROTO_ERROR "报文格式有误"
+#define POP3_PERM_FORBID "禁止通过"
+#define POP3_UNKNOWN_CMD "未知的命令"
+
+//过滤DNS使用的宏
+#define DNS_PROTO_ERROR "报文格式有误"
+#define DNS_PERM_FORBID "禁止通过"
+#define DNS_DOMAINNAME_ERROR "解析DNS查询的域名出错"
+#define DNS_NOT_REQUEST "不是DNS查询请求"
+
+//过滤MYSQL使用的宏
+#define MYSQL_PERM_FORBID "禁止通过"
+
+//过滤SYBASE使用的宏
+#define SYBASE_PERM_FORBID "禁止通过"
+
+//过滤DB2使用的宏
+#define DB2_PERM_FORBID "禁止通过"
+
+//过滤ORACLE使用的宏
+#define ORACLE_PERM_FORBID "禁止通过"
+
+//过滤DM使用的宏
+#define DM_PERM_FORBID "禁止通过"
+
+//过滤SQLSERVER使用的宏
+#define SQLSERVER_PERM_FORBID "禁止通过"
+
+//过滤SSL使用的宏
+#define SSL_PERM_FORBID "禁止通过"
+#define SSL_NOT_FIND_IN_MAP "MAP中没找到记录,软件可能需要升级"
+
+//过滤FTP使用的宏
+#define FTP_UNKNOWN_CMD "未知的命令"
+#define FTP_0D0A_NOT_FIND "FTP命令后没找到0d0a"
+#define FTP_PERM_FORBID "禁止通过"
+
+//过滤DBSync使用的宏
+#define DBSYNC_FLAG_ERROR "数据库同步标志验证失败"
+#define DBSYNC_INFO          "数据库同步"
+#define DBSYNC_STATUS        "提示"
+#define DBSYNC_SUCCESS       "成功"
+#define DBSYNC_FAIL          "失败"
+#define DBSYNC_TIME_ERROR   "数据库时间同步失败"
+#define DBSYNC_UPDATE_ERROR "数据库同步编辑失败"
+#define DBSYNC_INSERT_ERROR "数据库同步新增失败"
+
+//过滤SMB使用的宏
+#define SMB_PERM_FORBID "禁止通过"
+
+//过滤4BYTE使用的宏
+#define MULTI_BYTE_PASS "响应信息不符合协议要求"
+
+//过滤TCP单向使用的宏
+#define TCPSINGLE_TRY_PASS "尝试传输反向信息"
+
+//过滤UDP单向使用的宏
+#define UDPSINGLE_TRY_PASS "尝试传输反向信息"
+
+//过滤ICMP使用的宏
+#define ICMP_PROTO_ERROR "报文格式有误"
+#define ICMP_RULE_NOT_FIND "未找到匹配的规则"
+#define ICMP_PERM_FORBID "禁止通过"
+
+//过滤Modbus使用的宏
+#define MODBUS_DATALEN_ERROR "报文长度有误"
+#define MODBUS_PROTO_ERROR "报文格式有误"
+#define MODBUS_PERM_FORBID "禁止通过"
+#define MODBUS_FUNC_CODE_ERROR "功能码非法"
+
+//过滤WINCC使用的宏
+#define WINCC_PERM_FORBID "禁止通过"
+
+//过滤OPC使用的宏
+#define OPC_PERM_FORBID "禁止通过"
+
+//过滤OPCUA使用的宏
+#define OPCUA_PERM_FORBID "禁止通过"
+
+//过滤SNMP使用的宏
+#define SNMP_PERM_FORBID "禁止通过"
+
+//过滤DNP3使用的宏
+#define DNP3_DATALEN_ERROR "报文长度有误"
+#define DNP3_PROTO_ERROR "报文格式有误"
+#define DNP3_LHEAD_ERROR "链路层头部校验失败"
+#define DNP3_LLEN_ERROR "链路层长度字段校验失败"
+#define DNP3_CRC_ERROR "CRC校验失败"
+#define DNP3_RANGE_ERROR "变程范围有误"
+#define DNP3_PERM_FORBID "禁止通过"
+
+//过滤IEC104使用的宏
+#define IEC104_DATALEN_ERROR "报文长度有误"
+#define IEC104_PROTO_ERROR "报文格式有误"
+#define IEC104_PERM_FORBID "禁止通过"
+
+//过滤MMS使用的宏
+#define MMS_PERM_FORBID "禁止通过"
+
+//过滤S7使用的宏
+#define S7_PERM_FORBID "禁止通过"
+
+//过滤XMPP使用的宏
+#define XMPP_PERM_FORBID "禁止通过"
+
+//过滤CIP使用的宏
+#define CIP_PERM_FORBID "禁止通过"
+#define CIP_POINT_NAME  "测点名称"
+#define CIP_POINT_VALUE "测点值"
+
+
+//与写数据库有关的宏信息
+#define D_SUCCESS   "成功"
+#define D_FAIL      "失败"
+#define D_REFUSE    "拒绝"
+#define D_WARN      "警告"
+
+#define LOGNAME_SYSLOG "系统日志"
+#define LOGNAME_SYSTEM_STATUS "系统状态日志"
+#define LOGNAME_CALLLOG "访问日志"
+#define LOGNAME_FILTERLOG "内容过滤日志"
+#define LOGNAME_LINKLOG "攻击防护日志"
+#define LOGNAME_FILESYNCLOG "文件交换日志"
+
+#define SECWAY_NORMAL   "正常"
+#define SECWAY_ABNORMAL "异常"
+#define SYSTEM_STATUS_SUMMARY "活动链接[%d]CPU利用率[%s%%]存储利用率[%s%%]内存利用率[%s%%]隔离通道[%s]实时吞吐量[%lldbps]"
+#define INNET_SIDE "内网"
+#define OUTNET_SIDE "外网"
+#define BOND_CARD "负载均衡网卡"
+#define LOG_TYPE_LINE_CK_FAIL "连通性检查异常"
+#define LOG_TYPE_LINE_CK_OK   "连通性恢复正常"
+
+#define TCP_PORT_TEST_OK "连接成功"
+#define TCP_PORT_TEST_FAIL "连接失败"
+
+#define LOG_TYPE_CFG "配置文件"
+#define LOG_TYPE_SYS_STATUS "系统状态"
+#define LOG_TYPE_WORK_MODE "工作模式"
+#define LOG_TYPE_SET_RULE "设置规则"
+#define LOG_TYPE_IP_CK "IP检查"
+#define LOG_TYPE_PORT_CK "应用端口检查"
+#define LOG_TYPE_SECWAY_CK "安全通道检查"
+#define LOG_TYPE_OBJ_CK "对象检查"
+#define LOG_TYPE_MODE_CK "模式检查"
+#define LOG_TYPE_AUTH_CK "授权检查"
+#define LOG_TYPE_AUTO_PROXY "自动代理对应"
+#define LOG_TYPE_DISK_CK "磁盘空间检测"
+#define LOG_TYPE_CER_SYNC "证书同步"
+#define LOG_TYPE_SYSLOG "SYSLOG发送"
+#define LOG_TYPE_SMS "短信告警"
+#define LOG_TYPE_WORK_STATUS "工作状态"
+#define LOG_TYPE_FILE_SYNC "文件交换"
+#define LOG_TYPE_DBSYNC "数据库同步"
+#define LOG_TYPE_MULTICAST "组播策略"
+
+#define LOG_TYPE_SIP_NORM "平台级联"
+#define LOG_TYPE_SIP_INTERCONNECT "平台互联"
+#define LOG_TYPE_SIP_LINK "平台级联联动"
+#define LOG_TYPE_CLIENT_SIP_NORM "视频代理"
+#define LOG_TYPE_CLIENT_SIP_LINK "视频代理联动"
+#define LOG_TYPE_LINK_NODE_CHECK "联动节点状态"
+#define LOG_TYPE_LINK_SVR        "视频联动服务"
+#define LOG_TYPE_PDT             "PDT互联"
+
+#define LOG_TYPE_ROUTE "路由设置"
+#define LOG_TYPE_SNMP "SNMP报警"
+#define LOG_TYPE_RUN "启动"
+#define LOG_TYPE_TRAN_FILE "策略文件传输"
+#define LOG_TYPE_INIT "设备初始化"
+#define LOG_TYPE_HEARTBEAT "热备心跳探测"
+#define LOG_TYPE_HA_RULE "热备策略同步"
+#define LOG_TYPE_VIDEO_LINK "视频联动"
+#define LOG_TYPE_AUTOBAK "策略自动备份"
+#define LOG_TYPE_FAST_TRAN "快速交换"
+#define LOG_TYPE_FILTER_FILE "内容审查发现禁止通过的文件类型"
+#define LOG_TYPE_WEBPROXY "Web代理"
+#define LOG_TYPE_NET_LINE_CK "连通性检查"
+
+#define LOG_CONTENT_OPEN_FILE_ERR  "打开文件失败,请检查文件是否存在"
+#define LOG_CONTENT_READ_FILE_ERR  "读取文件失败,请检查文件是否有误"
+#define LOG_CONTENT_READ_DEVBS_ERR "设备文件读取失败,开始重新读取"
+#define LOG_CONTENT_READ_YWBS_ERR  "策略文件读取失败,开始重新读取"
+#define LOG_CONTENT_RUN_STATUS     "启动系统状态采集程序"
+#define LOG_CONTENT_RUN_STATUS_ERR "启动系统状态采集程序失败,可能因为系统资源不足"
+#define LOG_CONTENT_TRANSPARENT    "当前工作模式为[透明模式]"
+#define LOG_CONTENT_PROXY          "当前工作模式为[代理模式]"
+#define LOG_CONTENT_ROUTE          "当前工作模式为[路由模式]"
+#define LOG_CONTENT_SET_RULE       "开始设置业务规则"
+#define LOG_CONTENT_NO_IP          "您还没有给设备设置IP,忽略规则策略,请先设置IP再使用"
+#define LOG_CONTENT_46RANGE_PORT   "IPv4&IPv6交叉访问,代理端口和目的端口不支持范围,请修改应用的端口信息"
+#define LOG_CONTENT_SOBJ_ERR       "规则源对象个数有误,请检查改正,暂时忽略该规则"
+#define LOG_CONTENT_DOBJ_ERR       "规则目的对象个数有误,请检查改正,暂时忽略该规则"
+#define LOG_CONTENT_OPC_MODE_ERR   "请在透明模式或路由模式下使用OPC应用,代理模式不支持!"
+#define LOG_CONTENT_AUTO_PROXY_FAIL "目的对象是范围对象时,不自动代理对应,请修改目的对象为单个对象,或添加多IP对应"
+#define LOG_CONTENT_RUN_DISK_CK     "启动磁盘容量检测与处理线程"
+#define LOG_CONTENT_RUN_DISK_CK_ERR "启动磁盘容量检测与处理线程失败,可能因为系统资源不足"
+#define LOG_CONTENT_CER_SYNC_ERR "启动证书同步线程失败,可能因为系统资源不足"
+#define LOG_CONTENT_SYSLOG_ERR   "启动发送SYSLOG的线程失败,可能因为系统资源不足或目标服务器不可达"
+#define LOG_CONTENT_SMS_ERR      "启动短信报警失败,可能因为系统资源不足"
+#define LOG_CONTENT_SECWAY_ERR   "安全通道检查失败,请检查配置"
+#define LOG_CONTENT_RUN_NORMAL   "设备开始正常工作"
+#define LOG_CONTENT_RUN_FILE_SYNC     "启动文件交换程序"
+#define LOG_CONTENT_RUN_FILE_SYNC_ERR "启动文件交换线程失败,可能因为系统资源不足"
+#define LOG_CONTENT_RUN_PVT_FILE_SYNC "启动私有协议文件交换程序"
+#define LOG_CONTENT_MOD_CER_ERR "模块未授权"
+#define LOG_CONTENT_RUN_DBSYNC     "启动数据库同步程序"
+#define LOG_CONTENT_RUN_DBSYNC_ERR "启动数据库同步线程失败,可能因为系统资源不足"
+#define LOG_CONTENT_MULTICAST_SRCIP_RANGE    "超出组播IP范围"
+#define LOG_CONTENT_MULTICAST_IP_ALL         "源组播IP,目的组播IP,目的发送IP中不允许包含全对象"
+#define LOG_CONTENT_MULTICAST_IP_NULL        "源接收IP,目的发送IP都不允许为空"
+#define LOG_CONTENT_MULTICAST_IP_RANGE       "超出组播IP范围"
+#define LOG_CONTENT_MULTICAST_RCVIP_NOT_FIND "接收IP不正确,在设备配置的IP中没找到该IP"
+#define LOG_CONTENT_MULTICAST_CONF_CK_ERR    "组播配置信息检查失败"
+#define LOG_CONTENT_MULTICAST_CONF_CK_OK    "组播配置信息检查通过"
+#define LOG_CONTENT_MULTICAST_TRANSFER       "转发条数"
+#define LOG_CONTENT_ROUTE_ERR "设置路由失败,请检查添加路由的语句是否有误"
+#define LOG_CONTENT_SNMP_CONF_NULL "SNMP通讯IP,SNMP共同体名称,不允许为空"
+#define LOG_CONTENT_READ_KEY_ERR "读取关键字审查文件失败,请检查文件是否存在"
+#define LOG_CONTENT_SYS6_RUN "启动业务处理主程序[sys6]"
+#define LOG_CONTENT_INIT_BS_ERR "初始化业务失败"
+#define LOG_CONTENT_REFUSE "访问阻断"
+#define LOG_CONTENT_RETRAN_FILE "内网发给外网的策略文件校验失败,开始重传"
+#define LOG_CONTENT_TOOL_INIT "通过专用初始化工具初始化本设备操作"
+#define LOG_CONTENT_MAINDEV_SELF "不应该把从属的主设备设置为自身"
+#define LOG_CONTENT_INNERTYPE_ERR "内部硬件型号不同,主设备拒绝向从设备同步策略"
+#define LOG_CONTENT_VIDEO_LINK_OK "初始化成功"
+#define LOG_CONTENT_VIDEO_LINK_ERR "初始化失败,即将重试"
+#define LOG_CONTENT_AUTOBAK_RUN "启动策略自动备份程序[autobak]"
+#define LOG_CONTENT_AUTOBAK_WORKING "策略自动备份程序开始正常工作"
+#define LOG_CONTENT_AUTOBAK_LOGIN_ERR "登录备份服务器失败,请检查备份服务器IP、端口、用户名、密码是否正确,网络连通性是否正常"
+#define LOG_CONTENT_AUTOBAK_PUT_ERR "上传备份文件失败,请检查网络连通性是否正常,策略文件接收端运行是否正常"
+#define LOG_CONTENT_AUTOBAK_PUT_OK "策略自动备份成功"
+#define LOG_CONTENT_AUTOBAK_IP_ERR "请检查策略自动备份,服务器IP配置是否正确"
+#define LOG_CONTENT_AUTOBAK_PORT_ERR "请检查策略自动备份,服务器端口配置是否正确"
+#define LOG_CONTENT_AUTOBAK_CYCLE_ERR "请检查策略自动备份,周期配置是否正确"
+#define LOG_CONTENT_AUTOBAK_TMPFILE_ERR "打开或创建策略自动备份临时文件失败,请检查对该目录是否有读写权限"
+#define LOG_CONTENT_AUTOBAK_TMPFILE_WRITE_ERR "写入策略自动备份临时文件失败,请检查对该目录是否有读写权限"
+#define LOG_CONTENT_HA_RULE_FROMMASTER_OK "主设备成功向本机同步策略"
+#define LOG_CONTENT_HA_RULE_TOSLAVE_OK "本机成功向从设备同步策略"
+#define LOG_CONTENT_TOOL_INIT "通过专用初始化工具初始化本设备操作"
+#define LOG_CONTENT_RULE_CHECK_FAIL "策略校验没通过,传输失败"
+#define LOG_CONTENT_INNERDEVTYPE_ERR "内部硬件型号不同,主设备拒绝向从设备同步策略"
+#define LOG_CONTENT_PARENT_OK_I_STOP "上级主设备正常工作,本机停止"
+#define LOG_CONTENT_WANT_SWITCH "上级主设备要求切机,本机开始运行"
+#define LOG_CONTENT_HEARTBEAT_FAIL_I_RUN "热备心跳探测无回应,本机开始运行"
+#define LOG_CONTENT_DISK_ALARM "设备存储告警,剩余百分比、告警阈值分别为"
+#define LOG_CONTENT_FAST_TRAN_FAIL "开启快速交换失败,按普通模式处理"
+#define LOG_CONTENT_ORCL_REFUSE "拒绝未授权IP连接ORACLE"
+#define LOG_CONTENT_RTSP_REFUSE "拒绝未授权IP连接MEDIA"
+#define LOG_CONTENT_XMPP_REFUSE "拒绝未授权IP连接XMPP"
+
+#define SEARCH_AND_FOUND_CMD "通过搜索找到该命令"
+#define LOCATE_AND_FOUND_CMD "通过定位找到该命令"
+
+#endif /*_LOG_TRANSLATE_H_*/

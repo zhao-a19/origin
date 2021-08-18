@@ -1,0 +1,33 @@
+#ifndef _UTF8_CODE_H_
+#define _UTF8_CODE_H_
+
+#define FILE_SYNC_MOD               "文件交换"
+
+#define S_SUCCESS                   "成功"
+#define S_FAILED                    "失败"
+#define CONNECT_FAILED              "网络异常"
+#define MOUNT_SUCCESS               "挂载成功"
+#define MOUNT_FAILED                "挂载失败"
+#define NOT_FIND_SUB_PATH           "路径不存在"
+#define CAN_FIND_SUB_PATH           "路径可查找"
+#define FILE_SYNC                   "文件同步"
+#define FILE_DELETE                 "文件删除"
+#define FILE_BACK                   "文件备份"
+#define DIR_SYNC                    "目录同步"
+#define DIR_DELETE                  "目录删除"
+#define RW_FAILED                   "读写异常"
+#define FORBIDTYPE                  "禁止通过文件类型"
+#define FORBIDWORD                  "禁止通过的关键字"
+#define VIRUSTYPE                   "病毒文件"
+#define VIRUSFAIL                   "病毒检测失败"
+
+#define INT_SRV                     "(内网主机)"
+#define INT_BAK                     "(内网备份主机)"
+#define OUT_SRV                     "(外网主机)"
+#define OUT_BAK                     "(外网备份主机)"
+
+#define OPEN_SOURCE_FAILED          "打开源文件失败"
+#define OPEN_TARGET_FAILED          "打开目标文件失败"
+#define OPEN_BACK_FAILED            "打开备份文件失败"
+
+#endif /*_UTF8_CODE_H_*/

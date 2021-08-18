@@ -1,0 +1,28 @@
+#!/bin/bash
+
+echo "\nstart building...\n"
+
+echo "\nclear all...\n"
+make clean
+
+echo "convert file...\n"
+mv sip_tasks.cpp sip_tasks.cpp_bak
+iconv -f utf-8 -t gbk sip_tasks.cpp_bak -o sip_tasks.cpp
+mv main.cpp main.cpp_bak
+iconv -f utf-8 -t gbk main.cpp_bak -o main.cpp
+
+echo "\nmake...\n"
+if [ -f "$1" ]; then
+make -f $1
+else
+make
+fi
+
+echo "convert file back...\n"
+rm -f sip_tasks.cpp
+mv sip_tasks.cpp_bak sip_tasks.cpp
+rm -f main.cpp
+mv main.cpp_bak main.cpp
+
+echo "\nfinish build\n"
+

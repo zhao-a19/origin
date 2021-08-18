@@ -1,0 +1,56 @@
+
+#set build 
+CC = g++
+C = gcc
+CFLAGS +=  $(patsubst %,-I%,$(subst :, ,$(VPATH)))
+CPPFLAGS +=  $(patsubst %,-I%,$(subst :, ,$(VPATH)))
+
+#file size larger 2GB
+include ../osmake
+
+#project public files
+COM = ../public/
+COMINC = $(COM)inc/
+COMLIB = $(COM)lib/
+MYSQL = ../3rd-party/mysql/
+MYSQLINC = $(MYSQL)inc/
+MYSQLLIB = $(MYSQL)lib/
+
+ZLOG = ../3rd-party/zlog/
+ZLOGINC = $(ZLOG)inc/
+ZLOGLIB = $(ZLOG)lib/
+APPS = ../appsec/
+PRI = ../ftp/
+
+LIBS = -lpthread -lcurses  $(MYSQLLIB)libmysqlclient.a $(MYSQLLIB)libmyisammrg.a  -lz -ldl $(COMLIB)libsyssocket.a 
+LIBS += $(ZLOGLIB)libzlog.a
+
+#set env variable
+VPATH = $(COMINC): $(COMLIB): $(MYSQLINC): $(MYSQLLIB)
+VPATH += : $(ZLOGINC) : $(APPS) :$(PRI)
+
+#get all files
+SOURCE = $(wildcard *.cpp)  $(wildcard $(COM)*.cpp) 
+SOURCE += $(APPS)app.cpp
+SOURCE += $(PRI)priority.cpp 
+OBJS = $(patsubst %.cpp,%.o,$(SOURCE))
+
+all : clientsec	
+clientsec : $(OBJS)
+	$(CC) -Wall $(CPPFLAGS) -g -rdynamic -o $@ $^ $(LIBS)
+
+.PHONY : clean
+clean :
+	-rm -f clientsec $(OBJS) $(patsubst %.o,%.d,$(OBJS)) $(APPS)*.o
+
+include $(SOURCE:.cpp=.d)	
+	
+%.o:%.cpp
+	$(CC) -Wall -O2 $(CPPFLAGS) -c $< -o $@
+
+#get all dependencies
+%.d:%.cpp
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$

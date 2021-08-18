@@ -1,0 +1,16 @@
+#!/bin/bash
+
+rm -f ../lib/libsyssocket.a
+
+echo "\nstart building...\n"
+
+echo "\nclear all...\n"
+make clean
+
+echo "\nmake...\n"
+make
+
+cp -f libsyssocket.a ../lib/libsyssocket.a
+
+echo "\nfinish build\n"
+ 

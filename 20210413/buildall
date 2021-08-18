@@ -1,0 +1,441 @@
+#!/bin/bash
+
+root=`pwd`
+echo $root
+
+INNET=100
+OUTNET=200
+suosv8=v8
+suosv8_1=v81
+suosv6=v6
+suos_arm64_1043=arm64_1043
+suos_ft=ft
+VER=$1
+
+if [ "$VER" = "${suosv8_1}" ]; then
+    echo "suosv8.1=v81" > suos_vermake
+elif [ "$VER" = "${suosv8}" ]; then
+    echo "suosv8=v8" > suos_vermake
+elif [ "$VER" = "${suosv6}" ]; then
+    echo "suosv6=v6" > suos_vermake
+elif [ "$VER" = "${suos_arm64_1043}" ]; then
+    echo "suos_arm64_1043=arm64_1043" > suos_vermake
+elif [ "$VER" = "${suos_ft}" ]; then
+    echo "suos_ft=ft" > suos_vermake
+else
+    echo -e "\033[41;37m Usage ./buildall v6 or v8 or v81 or arm64_1043 or ft 对应内核版本如下: \033[0m"
+    ver_name=("v81" "v8" "v6" "arm64_1043" "ft")
+    ker_ver=("3.10.108R8" "3.2.101" "2.6.34.14", "4.14.67ARM", "4.4.58-20190309.kylin.desktop+")
+
+    for i in "${!ver_name[@]}"; do
+        echo "${ver_name[$i]}:  kernel version is ${ker_ver[$i]}"
+    done
+    exit 1
+fi
+
+BIN=${root}/bin/
+rm -rf ${BIN}*
+INBIN=${BIN}inbin/
+OUTBIN=${BIN}outbin/
+INSH=${BIN}insh/
+OUTSH=${BIN}outsh/
+mkdir -p ${INBIN}
+mkdir -p ${OUTBIN}
+mkdir -p ${INSH}
+mkdir -p ${OUTSH}
+SYS6_FILE=${root}/sysdata/sys6.cpp
+ORI_FILE=${root}/sysdata/sys6.cpp.ori
+t1="YYMMDD"
+t2=`date +%y%m%d`
+
+echo -e $VER
+echo -e $t2
+
+#tar wireshark.so
+cd wireshark_epan_print
+rm -rf lib/
+
+if [ "$VER" = "${suos_arm64_1043}" ] || [ "$VER" = "${suos_ft}" ];
+then
+	make
+else
+	tar -xf libv8.1.tar.gz && make
+fi
+cd ${root}
+
+
+#0.prepare
+find ./ -name "*.d" -type f |xargs -i rm '{}'
+find ./ -name "*.o" -type f |xargs -i rm '{}'
+cp -f ${ORI_FILE} ${SYS6_FILE}
+cp -f ${SYS6_FILE} ${ORI_FILE}
+sed -i "s/$t1/$t2/" ${SYS6_FILE}
+
+#1.sys6 recvmain hotbakmain
+echo -e "\nmake in bin...\n"
+make clean && make FLAG=-DSIDE=${INNET} sys6 recvmain hotbakmain
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+
+#2.autobak
+echo -e "\nmake autobak...\n"
+#cd autobak/
+cd autobak_new/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#3.gapsip
+echo -e "\nmake gapsip...\n"
+cd gapsip/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#4.shell_in
+echo -e "\nmake in sh...\n"
+cd shell_in/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#5.tools
+echo -e "\nmake tools...\n"
+cd tools/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#6.auth
+echo -e "\nmake auth...\n"
+cd auth/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#7.virusmain
+echo -e "\nmake virusmain...\n"
+cd virusmain/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#8.webproxy
+if [ "$VER" = "${suosv8_1}" ] || [ "$VER" = "${suos_arm64_1043}" ] || [ "$VER" = "${suos_ft}" ];
+then
+echo -e "\nmake webproxy...\n"
+chmod -R 777 webproxy6/
+cd webproxy6/
+./autogen.sh
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+else
+echo -e "\nmake webproxy...\n"
+chmod -R 777 webproxy/
+cd webproxy/
+chmod +x configure
+./configure
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+fi
+cd ${root}
+
+#9.msync
+echo -e "\nmake msync...\n"
+if [ "$VER" = "${suosv6}" ]; then
+    cd msync/src/
+else
+    cd fsync/src/
+fi
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#10.fileclient
+echo -e "\nmake fileclient...\n"
+cd public/socket/
+chmod +x build
+./build
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+cd clientsec/tool/
+chmod +x build
+./build
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#11.update
+echo -e "\nmake update...\n"
+cd update/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#12. smsclient
+echo -e "\nmake smsc...\n"
+cd smsclient/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#13. ntpclient
+echo -e "\nmake ntpclient...\n"
+cd ntpclienttiny/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#14. transfer
+echo -e "\nmake transfer...\n"
+cd transfer/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#15.dbsync_tool
+echo -e "\nmake dbsync_tool...\n"
+cd dbsync_tool/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#16.check_log
+echo -e "\nmake check_log...\n"
+cd check_log/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#17.diffcfg
+echo -e "\nmake diffcfg...\n"
+cd diffcfg/
+make clean && make FLAG=-DSIDE=${INNET}
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+echo -e "\ncopy in file...\n"
+cp -f sys6                   ${INBIN}
+cp -f recvmain               ${INBIN}
+cp -f hotbakmain             ${INBIN}
+#cp -f autobak/autobak        ${INBIN}
+cp -f autobak_new/autobak    ${INBIN}
+cp -f gapsip/gapsip          ${INBIN}
+cp -f gapsip/gapsip          ${OUTBIN}
+cp -f shell_in/init_in       ${INSH}
+cp -f shell_in/start         ${INSH}
+cp -f shell_in/startall      ${INSH}
+cp -f shell_in/stop          ${INSH}
+cp -f shell_in/initsys       ${INSH}
+cp -f shell_in/version_sync  ${INSH}
+cp -f shell_in/restart       ${INSH}
+cp -f tools/checkfilevir     ${INBIN}
+cp -f tools/checkfilevir     ${OUTBIN}
+cp -f tools/clitool          ${INBIN}
+cp -f tools/clitool          ${OUTBIN}
+cp -f tools/clean_track      ${INBIN}
+cp -f tools/clean_track      ${OUTBIN}
+cp -f tools/cmdproxy         ${INBIN}
+cp -f tools/createdb         ${INBIN}
+cp -f tools/createdb         ${OUTBIN}
+cp -f tools/getfile          ${INBIN}
+cp -f tools/putfile          ${INBIN}
+cp -f tools/localip          ${INBIN}
+cp -f tools/syslog_tool      ${INBIN}
+cp -f tools/syslog_tool      ${OUTBIN}
+cp -f tools/checkmac         ${INBIN}
+cp -f tools/checkmac         ${OUTBIN}
+cp -f tools/enfile           ${INBIN}
+cp -f tools/log_mv           ${INBIN}
+if [ "$VER" = "${suosv8_1}" ]; then
+    cp -f tools/callwd           ${INBIN}
+    cp -f tools/callwd           ${OUTBIN}
+fi
+cp -f transfer/transfer      ${INBIN}
+cp -f transfer/transfer      ${OUTBIN}
+cp -f auth/auth_tool         ${INBIN}
+cp -f auth/ausvr             ${INBIN}
+cp -f tools/sendsig          ${INBIN}
+cp -f tools/tcpsock          ${INBIN}
+cp -f tools/tcpsock          ${OUTBIN}
+cp -f update/update          ${INBIN}
+cp -f dbsync_tool/dbsync_tool ${INBIN}
+cp -f virusmain/virusmain    ${INBIN}
+cp -f virusmain/virusmain    ${OUTBIN}
+cp -f virusmain/startvir     ${INSH}
+cp -f virusmain/startvir     ${OUTSH}
+cp -f check_log/check_log    ${INBIN}
+cp -f diffcfg/diffcfg        ${INBIN}
+
+if [ "$VER" = "${suosv6}" ]; then
+    cp -f msync/src/msync        ${INBIN}
+else
+    cp -f fsync/src/msync        ${INBIN}
+fi
+cp -f clientsec/tool/fileclient ${INBIN}
+cp -f inout_bin/log.cfg         ${INBIN}
+cp -f inout_bin/webpyinfo.html  ${INBIN}
+#cp -f inout_bin/irq.sh       ${INBIN}
+cp -f inout_bin/logger.sh     ${INBIN}
+cp -f inout_bin/logger.sh     ${OUTBIN}
+cp -f inout_bin/alter.sh      ${INBIN}
+cp -f inout_bin/alter.sh      ${OUTBIN}
+cp -f inout_bin/modphpini.sh  ${INBIN}
+cp -f inout_bin/modphpini.sh  ${OUTBIN}
+cp -f smsclient/smsc          ${INBIN}
+
+if [ "$VER" = "${suosv8_1}" ]  || [ "$VER" = "${suos_arm64_1043}" ] || [ "$VER" = "${suos_ft}" ];
+then
+    cp -f webproxy6/src/tinyproxy ${INBIN}webproxy
+    cp -f webproxy6/src/tinyproxy ${OUTBIN}webproxy
+    cp -f ntpclienttiny/ntpclient ${INBIN}
+    cp -f ntpclienttiny/ntpclient ${OUTBIN}
+    cp -f inout_bin/ipv6routedel.sh ${INBIN}
+    cp -f inout_bin/ipv6routedel.sh ${OUTBIN}
+else
+    cp -f webproxy/src/tinyproxy ${INBIN}webproxy
+    cp -f webproxy/src/tinyproxy ${OUTBIN}webproxy
+    cp -f tools/ntpclient        ${INBIN}
+    cp -f tools/ntpclient        ${OUTBIN}
+fi
+
+if [ "$VER" = "${suosv6}" ]; then
+    cp -f inout_bin/awk         ${INBIN}
+    cp -f inout_bin/awk         ${OUTBIN}
+    cp -f inout_bin/iptables    ${INBIN}
+    cp -f inout_bin/iptables    ${OUTBIN}
+fi
+
+if [ "$VER" = "${suosv8_1}" ]; then
+    cp -f inout_bin/zlib.so_x86_64 ${INBIN}zlib.so
+    cp -f inout_bin/zlib.so_x86_64 ${OUTBIN}zlib.so
+elif [ "$VER" = "${suos_arm64_1043}" ]; then
+    cp -f inout_bin/zlib.so_arm64 ${INBIN}zlib.so
+    cp -f inout_bin/zlib.so_arm64 ${OUTBIN}zlib.so
+#else
+fi
+
+echo -e "\ncopy in file over\n"
+
+#out1.sys6_w recvmain_w
+echo -e "\nmake sys6_w recvmain_w...\n"
+make clean && make FLAG=-DSIDE=${OUTNET} sys6 recvmain
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+
+#out2.shell_out
+echo -e "\nmake out sh...\n"
+cd shell_out/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#out3.crt
+echo -e "\nmake crt...\n"
+cd crt/
+make clean && make
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+#out4.tools
+echo -e "\nmake tools...\n"
+cd tools/
+make clean && make FLAG=-DSIDE=${OUTNET} putfile localip
+if [ $? -ne 0 ]; then
+echo "build error" && exit 1
+fi
+cd ${root}
+
+echo -e "\ncopy out file...\n"
+cp -f sys6                      ${OUTBIN}sys6_w
+cp -f recvmain                  ${OUTBIN}recvmain_w
+cp -f shell_out/init_out        ${OUTSH}
+#cp -f shell_out/monitor         ${OUTSH}
+cp -f crt/crt                   ${OUTBIN}
+cp -f tools/putfile             ${OUTBIN}
+cp -f tools/localip             ${OUTBIN}
+cp -f inout_bin/log.cfg         ${OUTBIN}
+cp -f inout_bin/webpyinfo.html  ${OUTBIN}
+#cp -f inout_bin/irq.sh          ${OUTBIN}
+echo -e "\ncopy out file over\n"
+
+mv ${ORI_FILE} ${SYS6_FILE}
+
+chmod +x ${INBIN}*
+chmod +x ${OUTBIN}*
+chmod +x ${INSH}*
+chmod +x ${OUTSH}*
+
+if [ "$VER" = "${suosv8_1}" ]; then
+tar -czf bin_v8.1_$t2.tgz ./bin/
+elif [ "$VER" = "${suos_arm64_1043}" ]; then
+tar -czf bin_arm64_1043_$t2.tgz ./bin/
+elif [ "$VER" = "${suos_ft}" ]; then
+tar -czf bin_ft_$t2.tgz ./bin/
+elif [ "$VER" = "${suosv8}" ]; then
+tar -czf bin_v8_$t2.tgz ./bin/
+elif [ "$VER" = "${suosv6}" ]; then
+tar -czf bin_v6_$t2.tgz ./bin/
+fi
+
+ls -l bin_*.tgz
+
+echo -e "\n${INBIN}:"
+ls ${INBIN}
+ls ${INBIN} |wc -l
+
+echo -e "\n${OUTBIN}:"
+ls ${OUTBIN}
+ls ${OUTBIN} |wc -l
+
+echo -e "\n${INSH}:"
+ls ${INSH}
+ls ${INSH} |wc -l
+
+echo -e "\n${OUTSH}:"
+ls ${OUTSH}
+ls ${OUTSH} |wc -l
+
+echo -e "\nbuild over...\n"
+exit 0

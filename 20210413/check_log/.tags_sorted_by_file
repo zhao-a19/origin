@@ -1,0 +1,34 @@
+check_log_get_avail_size	check_log.cpp	/^int64 check_log_get_avail_size(bool is_num, pchar buff, uint32 buff_len)$/;"	f
+check_log_get_average	check_log.cpp	/^int64 check_log_get_average(pcheck_log list, uint32 len)$/;"	f
+check_log_get_use_size	check_log.cpp	/^int64 check_log_get_use_size(void)$/;"	f
+check_log_size	check_log.cpp	/^void check_log_size(check_log check_data, bool last_data)$/;"	f
+write_log_info	check_log.cpp	/^static int32 write_log_info(check_log check_data, bool first, bool flag, pchar filepath = CHECKLOG_FILE)$/;"	f	file:
+CHECKLOG_DEFAULT_DAY	check_log.h	30;"	d
+CHECKLOG_DIST_FILE	check_log.h	27;"	d
+CHECKLOG_FILE	check_log.h	26;"	d
+CHECKLOG_MAX	check_log.h	24;"	d
+CHECKLOG_ONE_HOUR_TIME	check_log.h	29;"	d
+__CHECK_LOG_H__	check_log.h	12;"	d
+_check_log	check_log.h	/^typedef struct _check_log {$/;"	s
+check_log	check_log.h	/^} check_log, *pcheck_log;$/;"	t	typeref:struct:_check_log
+check_log_count	check_log.h	/^    int32 check_log_count;$/;"	m	struct:_check_log
+end_size	check_log.h	/^    int64 end_size;$/;"	m	struct:_check_log
+end_time	check_log.h	/^    int64 end_time;$/;"	m	struct:_check_log
+pcheck_log	check_log.h	/^} check_log, *pcheck_log;$/;"	t	typeref:struct:_check_log
+start_size	check_log.h	/^    int64 start_size;$/;"	m	struct:_check_log
+start_time	check_log.h	/^    int64 start_time;$/;"	m	struct:_check_log
+success_flag	check_log.h	/^    int32 success_flag;$/;"	m	struct:_check_log
+update_time	check_log.h	/^    int64 update_time;$/;"	m	struct:_check_log
+VersionNO	main.cpp	/^static pchar VersionNO = "2.0.1";     \/\/版本号,尾号为偶数表示正式版本，奇数为测试$/;"	v	file:
+check_log_space	main.cpp	/^static void *check_log_space(void *arg)$/;"	f	file:
+get_check_info	main.cpp	/^static int32 get_check_info(pcheck_log check_data, pchar cfg)$/;"	f	file:
+get_check_list	main.cpp	/^static int32 get_check_list(pcheck_log list, pchar cfg)$/;"	f	file:
+get_log_day	main.cpp	/^static void *get_log_day(void *arg)$/;"	f	file:
+glog_p	main.cpp	/^_log_preinit_(glog_p);$/;"	v
+main	main.cpp	/^int main (int argc, char  *argv[])$/;"	f
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_PROGRAM_VERSION	5.8	//
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/

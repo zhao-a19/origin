@@ -1,0 +1,17 @@
+#!/bin/bash
+
+rm -f ../lib/libsuricata.a
+
+echo "\nstart building...\n"
+
+echo "\nclear all...\n"
+make clean
+
+echo "\nmake...\n"
+make
+
+cp -f libsuricata.a ../lib/libsuricata.a
+
+echo "\nfinish build\n"
+ 
+ 

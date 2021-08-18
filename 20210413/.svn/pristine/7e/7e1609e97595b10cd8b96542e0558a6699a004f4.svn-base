@@ -1,0 +1,381 @@
+/*******************************************************************************************
+*文件:    debugout.h
+*描述:    调试信息输出
+*
+*作者:    张冬波
+*日期:    2014-11-13
+*修改:    创建文件                ------>     2014-11-13
+*           添加显示日期          ------>     2014-12-08
+*           基本通过PCLINT检查    ------>     2014-12-09
+*           添加调试程序栈输出    ------>     2015-06-08
+*           默认关闭用户层调试    ------>     2015-12-24
+*           支持zlog输出          ------>     2016-06-20
+*           默认log配置           ------>     2016-06-22
+*           统一模块自定义log配置文件  ------>     2016-06-24
+*           添加pthread_setself      ------> 2021-02-21 wjl
+*******************************************************************************************/
+#ifndef __DEBUGOUT_H__
+#define __DEBUGOUT_H__
+
+//#include <apue.h>
+#include <stdarg.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include "datatype.h"
+#include "zlog.h"
+
+#ifdef __cplusplus
+
+extern "C" {
+
+#endif
+
+static const int32 MAXLINECHARS = 1024;      //最多显示信息字符
+
+#define __DEBUG_INFO__  0
+#define __DEBUG_ERR__   1
+
+#define __DEBUG_DBG__   1
+#if __DEBUG_DBG__
+#ifdef __DEBUG_INFO__
+#undef __DEBUG_INFO__
+#endif
+#define __DEBUG_INFO__  1
+#define __DEBUG_ERR__   1
+#endif
+
+#define __DEBUG_MORE__  0       //详细信息，用户层使用
+
+//main.cpp中定义&初始化
+#ifdef __zlog_h
+typedef zlog_category_t *loghandle;
+#define _log_preinit_(v) loghandle v
+//必须为宏定义，v句柄变量，m模块log名称
+//默认log配置
+#ifndef LOG_CFG_PATH
+#define LOG_CFG_PATH "/initrd/abin/log.cfg"
+#endif
+
+#define _log_init_(v,m) do{ \
+    if (v != NULL) {    \
+        fprintf(stderr,"zlog %s (%s:%d)\n", #m, __FILE__, __LINE__);  \
+        zlog_fini();    \
+    }   \
+    if (zlog_init(LOG_CFG_PATH)) { \
+        fprintf(stderr,"zlog %s init1 (%s:%d)\n", #m, __FILE__, __LINE__);   \
+        if (zlog_init(LOG_CFG_PATH)) { \
+            fprintf(stderr,"zlog %s init2 (%s:%d)\n", #m, __FILE__, __LINE__);   \
+        }   \
+    }   \
+    v = zlog_get_category(#m);   \
+    if (v == NULL) {   \
+        fprintf(stderr,"zlog %s (%s:%d)\n", #m, __FILE__, __LINE__); \
+        zlog_fini();    \
+    }   \
+}while(0)
+
+#define _log_finish_(v) zlog_fini()
+#else
+typedef void* loghandle;
+#define _log_preinit_(v) //
+#define _log_init_(v,f) //
+#define _log_finish_(v) //
+#endif
+
+extern loghandle glog_p;     //进程资源
+
+static void print_time(pchar buffout)
+{
+    struct timeb tp;
+    struct tm s_tm;
+    char tmp[40];
+
+    ftime(&tp );
+    localtime_r(&(tp.time), &s_tm);
+
+#if 1
+    strftime(tmp, sizeof(tmp), "%F %T", &s_tm);
+    sprintf(buffout, "[%s.%03d] ", tmp, tp.millitm);
+#else
+    fprintf(stderr, "[%04d-%02d-%02d  %02d:%02d:%02d.%03d] ", 1900 + s_tm.tm_year, 1 + s_tm.tm_mon, s_tm.tm_mday,
+            s_tm.tm_hour, s_tm.tm_min, s_tm.tm_sec, tp.millitm);
+#endif
+
+}
+
+#ifdef __zlog_h
+#define PRINT_INFO_HEAD //
+#else
+#if __DEBUG_INFO__
+#define PRINT_INFO_HEAD {fprintf(stderr, "%%$INFO: %s:%s:%d: ---> ", __FILE__, __FUNCTION__, __LINE__);}
+#else
+#define PRINT_INFO_HEAD //
+#endif
+#endif
+
+#ifdef __zlog_h
+#if __DEBUG_INFO__
+#define print_info(fmt, args...)    zlog_info(glog_p, fmt, ##args)
+#else
+#define print_info(fmt, args...)    //
+#endif
+#else
+static void print_info(const pchar fmt, ...)
+{
+#if __DEBUG_INFO__
+    char line[MAXLINECHARS + 2] = {0};  //+2防止溢出
+
+    print_time(line);
+
+    {
+        va_list arg;
+        va_start(arg, fmt);
+        vsnprintf(line + strlen(line), MAXLINECHARS - strlen(line), fmt, arg);
+        va_end(arg);
+    }
+
+    strcat(line, "\n");
+
+    //输出到管道
+    fprintf(stderr, line);
+
+#endif
+
+}
+#endif
+
+#ifdef __zlog_h
+#define PRINT_DBG_HEAD //
+#else
+#if __DEBUG_DBG__
+#define PRINT_DBG_HEAD  {fprintf(stderr, "%%$DBG: %s:%s:%d: ---> ", __FILE__, __FUNCTION__, __LINE__);}
+#else
+#define PRINT_DBG_HEAD  //
+#endif
+#endif
+
+#ifdef __zlog_h
+#if __DEBUG_DBG__
+#define print_dbg(fmt, args...)    zlog_debug(glog_p, fmt, ##args)
+#else
+#define print_dbg(fmt, args...) //
+#endif
+#else
+static inline void print_dbg(const pchar fmt, ...)
+{
+#if __DEBUG_DBG__
+
+    char line[MAXLINECHARS + 2] = {0};  //+2防止溢出
+
+    print_time(line);
+
+    {
+        va_list arg;
+        va_start(arg, fmt);
+        vsnprintf(line + strlen(line), MAXLINECHARS - strlen(line), fmt, arg);
+        va_end(arg);
+    }
+
+    strcat(line, "\n");
+
+    //输出到管道
+    fprintf(stderr, line);
+
+
+#endif
+
+}
+#endif
+
+#ifdef __zlog_h
+#define PRINT_ERR_HEAD  //
+#else
+#if __DEBUG_ERR__
+#define PRINT_ERR_HEAD  {fprintf(stderr, "%%$ERR: %s:%s:%d: ---> ", __FILE__, __FUNCTION__, __LINE__);}
+#else
+#define PRINT_ERR_HEAD  //
+#endif
+#endif
+
+#ifdef __zlog_h
+#if __DEBUG_ERR__
+#define print_err(fmt, args...)    zlog_error(glog_p, fmt, ##args)
+#else
+#define print_err(fmt, args...) //
+#endif
+#else
+static void print_err(const pchar fmt, ...)
+{
+#if __DEBUG_ERR__
+
+    char line[MAXLINECHARS + 2] = {0};  //+2防止溢出
+
+    print_time(line);
+
+    {
+        va_list arg;
+        va_start(arg, fmt);
+        vsnprintf(line + strlen(line), MAXLINECHARS - strlen(line), fmt, arg);
+        va_end(arg);
+    }
+
+    strcat(line, "\n");
+
+    //输出到管道
+    fprintf(stderr, line);
+
+
+#endif
+
+}
+#endif
+
+#if __DEBUG_ERR__
+#include <execinfo.h>
+#define _STACKDEPTH_    100
+static void stackdump(int signo)
+{
+    void *buffer[_STACKDEPTH_] = {0};
+    int size;
+    char **strings = NULL;
+
+    PRINT_ERR_HEAD;
+    print_err("SIG = %d!", signo);
+
+    size = backtrace(buffer, _STACKDEPTH_);
+    strings = backtrace_symbols(buffer, size);
+    if (strings == NULL) {
+        PRINT_ERR_HEAD;
+        print_err("STACK ERROR!");
+        exit(EXIT_FAILURE);
+    }
+
+    PRINT_ERR_HEAD;
+    print_err("STACKs = %d:", size);
+    for (int i = 0; i < size; i++) {
+        print_err("STACKs_%d: %s", i, strings[i]);
+    }
+    free(strings);
+    strings = NULL;
+}
+#else
+static void stackdump(int signo)
+{
+
+}
+#endif
+
+#ifdef __zlog_h
+/**
+规则定义
+[global]
+strict init = true
+buffer min = 1024
+buffer max = 0
+rotate lock file = /tmp/zlog.lock
+
+[formats]
+logfmt  = "%%$%-6V: [%p.%T] [%F.%L(%U)] [%d.%ms] %m%n"
+
+模块信息输出规则（文件）
+[rules]
+xxx.*      "/initrd/data/.dbg/.xxx-%d(%Y%m%d).log", 100M;logfmt
+
+*/
+static void log_test(void)
+{
+    int rc;
+    zlog_category_t *zc;
+
+    rc = zlog_init("log.cfg");
+    if (rc) {
+        fprintf(stderr, "log init \n");
+        return;
+    }
+
+    zc = zlog_get_category("logtest");  //对应xxx
+    if (!zc) {
+        fprintf(stderr, "log get one category \n");
+        zlog_fini();
+        return;
+    }
+
+    zlog_debug(zc, "%s%d", "test", 111);
+    zlog_info(zc, "hello, zlog 2");
+    sleep(1);
+    zlog_info(zc, "hello, zlog 3");
+    zlog_debug(zc, "hello, zlog 4");
+
+    zlog_fini();
+}
+#else
+static void log_test(void)
+{
+    return;
+}
+
+#endif
+
+//测试命令调用
+#if __DEBUG_MORE__
+static void __do_system__(const pchar cmd)
+{
+    int status = system(cmd);
+    if (status == -1) {
+        PRINT_ERR_HEAD;
+        print_err("syscmd failed \"%s\"", cmd);
+    } else {
+        if (WIFEXITED(status)) {
+            PRINT_DBG_HEAD;
+            print_dbg("syscmd = \"%s\" normal exit = [%d]",  cmd, WEXITSTATUS(status));
+        } else {
+            PRINT_DBG_HEAD;
+            print_dbg("syscmd = \"%s\" abnormal exit = [%d]", cmd, WEXITSTATUS(status));
+        }
+    }
+}
+#else
+static inline void __do_system__(const pchar cmd)
+{
+    system(cmd);
+    usleep(100000);
+}
+
+#endif
+
+static void system_safe(const char *cmd)
+{
+    int status = system(cmd);
+    if (status == -1) {
+        PRINT_ERR_HEAD;
+        print_err("syscmd failed \"%s\"", cmd);
+    } else {
+        if (WIFEXITED(status)) {
+            PRINT_DBG_HEAD;
+            print_dbg("syscmd = \"%s\" normal exit = [%d]",  cmd, WEXITSTATUS(status));
+        } else {
+            PRINT_ERR_HEAD;
+            print_err("syscmd = \"%s\" abnormal exit = [%d]", cmd, WEXITSTATUS(status));
+        }
+    }
+}
+
+//线程通用操作，调用必须在线程函数中
+//1. 设置线程名，最多15个字符
+//2. 分离线程资源回收
+#include <pthread.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#define pthread_setname(name) prctl(PR_SET_NAME, (((name) == NULL)||(strlen(name)==0))?__FUNCTION__:name)
+#else
+#define pthread_setname(name,...) //
+#endif
+
+#define pthread_setself(name) do{pthread_setname(name);pthread_detach(pthread_self());}while(0)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+

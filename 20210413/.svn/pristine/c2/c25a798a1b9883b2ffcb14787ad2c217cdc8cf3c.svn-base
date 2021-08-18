@@ -1,0 +1,74 @@
+
+#set build 
+CC = g++
+C = gcc
+CFLAGS +=  $(patsubst %,-I%,$(subst :, ,$(VPATH)))
+CPPFLAGS +=  $(patsubst %,-I%,$(subst :, ,$(VPATH)))
+
+#file size larger 2GB
+include ../../osmake
+
+#project public files
+COM = ../../public/
+COMINC = $(COM)inc/
+COMLIB = $(COM)lib/
+ZLOG = ../../3rd-party/zlog/
+ZLOGINC = $(ZLOG)inc/
+ZLOGLIB = $(ZLOG)lib/
+PRI = ../../ftp/
+
+
+ifeq ($(shell uname), Linux) 
+	ifeq ($(osv), sw)
+	MYSQL = ../3rd-party/mysql/
+	MYSQLINC = $(MYSQL)inc/
+	MYSQLLIB = $(MYSQL)lib/
+	LIBS += $(ZLOGLIB)libzlog.a $(MYSQLLIB)libmysqlclient.a
+	else
+	MYSQL = /usr/local/mysql/
+	MYSQLINC = $(MYSQL)include/
+	MYSQLLIB = $(MYSQL)lib/
+	LIBS += -lzlog -lmysqlclient
+	endif
+else
+	LIBS += $(ZLOGLIB)libzlog.a 
+endif
+
+ifeq ($(shell getconf LONG_BIT), 32)
+   LIBS += -pthread $(COMLIB)libsyssocket.a -ldl  -lz
+else
+   LIBS += -pthread $(COMLIB)libsyssocket.a -ldl 
+endif
+
+#set env variable
+VPATH = $(COMINC): $(COMLIB): $(ZLOGINC) :$(PRI) 
+
+#get all files
+ifeq ($(shell uname), Linux)
+   VPATH += $(MYSQLINC)
+   FILTER = $(COM)FCLogManage.cpp
+else
+   FILTER = $(COM)sysdb.cpp $(COM)FCLogManage.cpp
+endif
+SOURCE = $(wildcard *.cpp)  $(filter-out $(FILTER), $(wildcard $(COM)*.cpp))
+SOURCE += $(PRI)priority.cpp
+OBJS = $(patsubst %.cpp,%.o,$(SOURCE))
+
+all : fileclient 	
+fileclient : $(OBJS)
+	$(CC) -Wall $(CPPFLAGS) -g -rdynamic -o $@ $^ $(LIBS) 
+.PHONY : clean
+clean :
+	-rm -f fileclient $(OBJS) $(patsubst %.o,%.d,$(OBJS)) 
+
+include $(SOURCE:.cpp=.d)	
+	
+%.o:%.cpp
+	$(CC) -Wall -O2 $(CPPFLAGS) -c $< -o $@
+
+#get all dependencies
+%.d:%.cpp
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$

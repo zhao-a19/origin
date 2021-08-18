@@ -1,0 +1,24 @@
+osv_temp=`uname -m`;
+ifeq ($(osv_temp), x86_64)
+osv = x86_64
+else ifeq ($(osv_temp), aarch64)
+osv = aarch64
+else
+osv = x86
+endif
+
+#file size larger 2GB
+ifeq ($(osv), sw)
+CFLAGS += -D__ILP32_OFFBIG_CFLAGS -DSW_UNIGAP_XXX
+CPPFLAGS += -D__ILP32_OFFBIG_CFLAGS -DSW_UNIGAP_XXX
+else
+CFLAGS += -D_FILE_OFFSET_BITS=64 -DSU_UNIGAP_XXX
+CPPFLAGS += -D_FILE_OFFSET_BITS=64 -DSU_UNIGAP_XXX
+endif
+
+dbs = mysql
+ifeq ($(dbs), lt)
+CFLAGS += -DSQLDB_LITE -D__APPEX__
+CPPFLAGS += -DSQLDB_LITE -D__APPEX__
+endif
+

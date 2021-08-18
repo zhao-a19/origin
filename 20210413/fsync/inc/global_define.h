@@ -1,0 +1,193 @@
+/*******************************************************************************************
+*文件:    global_define.h
+*描述:    全局定义模块
+*
+*作者:    宋宇
+*日期:    2019-11-10
+*修改:    创建文件                                             ------>     2019-11-10
+*1.在web—log结构体中增加备份路径的信息                         ------------->2020-02-26
+*2.修改线程栈大小，由1MB改为2MB                                ------>    2020-07-30
+*******************************************************************************************/
+#ifndef __GLOBAL_DEFINE_H__
+#define __GLOBAL_DEFINE_H__
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdexcept>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <net/if_arp.h>
+#include <libgen.h>
+#include <dlfcn.h>
+#include <sys/un.h>
+#include "debugout.h"
+#include "utf8_code.h"
+#include "protocol_api.h"
+
+
+#define FSYNC_GLOBAL_CONFIG_PATH                "/var/self/rules/conf/sysset.cf"
+#define FSYNC_CONFIG_PATH                       "/var/self/rules/conf/filesync.cf"
+#define FSYNC_CONFIG_PATH_UTF8                  "/var/self/rules/conf/filesync.cf.utf8"
+#define FSYNC_CONFIG_FLAG_PATH                  "/var/self/rules/conf/filesync_flag"
+#define FSYNC_CONF_RECORD_PATH                  "/var/self/rules/conf/fsync_record/"
+#define FSYNC_KEYWORD_GBK_FILE_PATH             "/var/self/rules/conf/Key.cfg"
+#define FSYNC_KEYWORD_UTF_FILE_PATH             "/var/self/rules/conf/KeyUTF.cfg"
+#define PREFILESYNC_CONF_PATH                   "/var/self/rules/precfg/PREFILESYNC"
+#define FSYNC_STACK_INFO_NAME                   "fsync_stack.info"
+
+#define Version "5.4.25"
+
+#define FSYNC_KEEP_RUN  0
+#define FSYNC_QUIT_NOW  1
+#define FSYNC_QUIT_SAFE 2
+
+#define FSYNC_TURN_OFF            0
+#define FSYNC_TURN_ON             1
+
+#define FSYNC_INT_TO_OUT       0
+#define FSYNC_OUT_TO_INT       1
+#define FSYNC_BOTH_WAY         2
+
+#define FSYNC_RM_FILE          1
+#define FSYNC_RM_ALL           2
+
+#define FSYNC_QUERY_TIME               3
+#define FSYNC_CONNECT_TIMES            3
+#define FSYNC_RETRY_TIME               5
+
+#define FSYNC_BLOCK_MAX_TIMES          10
+#define FSYNC_MONITOR_TIME             10
+
+#define FSYNC_PTHREAD_COUNT            16
+#define FSYNC_TIME_MAX_LEN             128
+#define FSYNC_RULE_MAX_COUNT           200
+#define FSYNC_PTHREAD_TOTAL_COUNT      200
+#define FSYNC_BUF_MAX_LEN              (8 * 1024)
+#define FSYNC_STACK_MAX_SIZE           (2048 * 1024)
+
+typedef struct SYSINFO {
+    int syslog_flag;
+    int record_flag;
+    int virus_flag;
+    int keyword_flag;
+} SYSINFO;
+
+typedef struct fs_oneway_t {
+    int del_source;                        //删除源选项       对应配置项:Del
+    int rename_flag;                       //重命名开关       对应配置项:RenameDest
+} fs_oneway_t;
+
+typedef struct fs_bothway_t {
+    int std_area;                          //基准方向         对应配置项:StdArea
+    int sync_del;                          //同步删除开关      对应配置项:BidirectionalDel
+} fs_bothway_t;
+
+
+typedef struct fs_rule_t {
+    int task_count;                        //总任务数
+    int virus_flag;                        //病毒检测开关
+    int keyword_flag;                      //关键字检查开关
+
+    pid_t task_pid;                        //任务pid
+    int task_id;                           //策略号           对应配置项:[TASK_n]
+    int task_stat;
+    char rule_name[FSYNC_NAME_MAX_LEN];    //策略名           对应配置项:TaskName
+    char task_name[FSYNC_NAME_MAX_LEN];
+    char tmp_extname[FSYNC_NAME_MAX_LEN];  //临时后缀名        对应配置项:_tmp_syncfile
+
+    int pthread_count;                     //线程数           对应配置项:PthreadCount
+    int scan_time;                         //扫描间隔         对应配置项:SyncCycle
+    int delay_time;                        //延迟发送时间      对应配置项:AfterTime
+
+    int log_flag;                          //日志开关         对应配置项:RecordLog
+    bool syslog_flag;                      //syslog开关
+
+    int filter_flag;                       //文件类型过滤      对应配置项:FilterFlag
+    char filter_list[FSYNC_PATH_MAX_LEN];  //文件类型过滤列表   对应配置项:FilterList
+
+    int del_record;                        //删除增量记录     对应配置项:DelRecord
+
+    int sync_area;                         //同步方向         对应配置项:Area
+    void *diff_info;                       //差异化选项        fs_oneway_t/fs_bothway_t
+
+    fs_server_t int_srv;                   //内网侧服务器信息
+    fs_server_t out_srv;                   //外网侧服务器信息
+
+    int int_bak_flag;                      //内网备份开关      对应配置项:InBackupFlag
+    fs_server_t int_bak;                   //内网侧备份服务器信息
+
+    int out_bak_flag;                      //外网备份开关      对应配置项:OutBackupFlag
+    fs_server_t out_bak;                   //外网侧备份服务器信息
+
+} fs_rule_t;
+
+
+typedef struct fs_send_t {
+    fs_rule_t *rule;
+    GAsyncQueue *ready_queue;
+    GList *keyword_list;
+
+    GHashTable *dir_hash_table;
+    pthread_mutex_t *dir_hash_mut;
+
+    struct timeval *work_stat;
+} fs_send_t;
+
+typedef struct fs_log_t {
+    const char *log_src_path;
+    const char *log_dst_path;
+    const char *log_bak_path;
+    char file_name[FSYNC_NAME_MAX_LEN];
+    const char *src_ip;
+    const char *dst_ip;
+    const char *bak_ip;
+    char src_port[FSYNC_IP_MAX_LEN];
+    char dst_port[FSYNC_IP_MAX_LEN];
+    char bak_port[FSYNC_IP_MAX_LEN];
+} fs_log_t;
+
+typedef struct fs_keyword_t {
+    int code_type;
+    int str_len;
+    char keyword[FSYNC_NAME_MAX_LEN];
+    int next[FSYNC_NAME_MAX_LEN];
+} fs_keyword_t;
+
+
+
+typedef struct fs_sync_t {
+    bool in_to_out;
+    int file_type;
+    int del_flag;
+
+    int src_protocol;
+    fs_work_t *src_worker;
+    char src_file[FSYNC_PATH_MAX_LEN];
+    struct stat src_stat;
+    int src_type;
+
+    int dst_protocol;
+    fs_work_t *dst_worker;
+    char dst_file[FSYNC_PATH_MAX_LEN];
+    struct stat dst_stat;
+    int dst_type;
+
+    bool is_bak;
+    int bak_protocol;
+    fs_work_t *bak_worker;
+    char bak_file[FSYNC_PATH_MAX_LEN];
+
+    char file_name[FSYNC_NAME_MAX_LEN];
+} fs_sync_t;
+#endif //__GLOBAL_DEFINE_H__

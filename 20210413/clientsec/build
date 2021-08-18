@@ -1,0 +1,26 @@
+#!/bin/bash
+
+echo "\nstart building...\n"
+
+echo "\nclear all...\n"
+make clean
+
+echo "convert file...\n"
+mv clientsec.cpp clientsec.cpp_bak
+iconv -f utf-8 -t gbk clientsec.cpp_bak -o clientsec.cpp
+
+echo "\nmake...\n"
+if [ -f "$1" ]; then
+make -f $1
+else
+make
+fi
+
+echo "convert file back...\n"
+rm -f clientsec.cpp
+mv clientsec.cpp_bak clientsec.cpp
+
+echo "\nfinish build\n"
+
+
+ 

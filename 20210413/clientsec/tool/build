@@ -1,0 +1,32 @@
+#!/bin/bash
+
+echo "\nstart building...\n"
+
+echo "\nclear all...\n"
+make clean
+rm -f ./libsqlite/libsqlite.a
+echo "convert file...\n"
+mv fileclient.cpp fileclient.cpp_bak
+#iconv -f utf-8 -t gbk fileclient.cpp_bak -o fileclient.cpp
+iconv -f utf-8 -t gbk fileclient.cpp_bak >  fileclient.cpp 2>&1
+gcc -c ./libsqlite/sqlite3.c
+ar -crv  ./libsqlite/libsqlite.a  sqlite3.o
+echo "\nmake...\n"
+if [ -f "$1" ]; then
+make -f $1
+else
+make
+fi
+
+if [ $? -ne 0 ]; then
+echo "make error" && exit 1
+fi
+
+echo "convert file back...\n"
+rm -f fileclient.cpp
+mv fileclient.cpp_bak fileclient.cpp
+
+echo "\nfinish build\n"
+
+
+ 
